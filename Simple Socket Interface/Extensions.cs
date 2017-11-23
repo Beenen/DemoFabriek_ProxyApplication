@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
@@ -9,26 +10,21 @@ namespace SocketInterface
 {
     static class Extensions
     {
-        public static void HandleCommand(this NetworkStream stream, Object targetObject, string data)
-        {
-            string[] args = data.Split('`');
-            MethodInfo method = targetObject.GetType().GetMethod(args[0]);
-            method.Invoke(targetObject, args.Skip(1).ToArray());
-        }
-
-        public static void RPC(this TcpClient client, string method, params object[] args)
+        public static void RPC(this TcpClient socket, string method, params object[] args)
         {
             string data = method;
             foreach (Object o in args)
                 data += "`" + o.ToString();
-            client.WriteString(data);
+            socket.WriteString(data);
         }
 
-        public static void WriteString(this TcpClient client, string data)
+        public static void WriteString(this TcpClient socket, string data)
         {
-            NetworkStream stream = client.GetStream();
-            Byte[] bytes = Encoding.ASCII.GetBytes(data);
-            stream.Write(bytes, 0, bytes.Length);
+            NetworkStream stream = socket.GetStream();
+            StreamWriter writer = new StreamWriter(stream);
+            writer.WriteLine(data);
+            writer.Flush();
+            Console.WriteLine("RPC: " + data);
         }
     }
 }
