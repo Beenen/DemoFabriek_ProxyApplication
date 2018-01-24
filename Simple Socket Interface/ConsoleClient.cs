@@ -13,12 +13,19 @@ namespace SocketInterface
         public static Session Session { get; private set; }
         public static bool IsConnected { get { return Session == null ? false : Session.Connected; } }
 
+        /// <summary>
+        /// Connect to OPC UA Server
+        /// </summary>
+        /// <param name="endpointURL"></param>
+        /// <returns></returns>
         public static async Task HandleClient(string endpointURL)
         {
             try
             {
                 Console.WriteLine("1 - Create an Application Configuration.");
                 Utils.SetTraceOutput(Utils.TraceOutput.DebugAndFile);
+
+                //Configuration
                 var config = new ApplicationConfiguration()
                 {
                     ApplicationName = "Console Client",
@@ -100,22 +107,24 @@ namespace SocketInterface
                     Console.WriteLine("    WARN: missing application certificate, using unsecure connection.");
                 }
 
+                //Discover wich possible connections are available at the server
                 Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
                 var selectedEndpoint = CoreClientUtils.SelectEndpoint(endpointURL, haveAppCertificate, 15000);
                 Console.WriteLine("    Selected endpoint uses: {0}",
                     selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
+                //Start connecting
                 Console.WriteLine("3 - Create a session with OPC UA server.");
                 var endpointConfiguration = EndpointConfiguration.Create(config);
                 var endpoint = new ConfiguredEndpoint(null, selectedEndpoint, endpointConfiguration);
                 Session = await Session.Create(config, endpoint, false, config.ApplicationName, 60000, new UserIdentity(new AnonymousIdentityToken()), null);
 
+                //See data structure
                 Console.WriteLine("4 - Browse the OPC UA server namespace.");
                 ReferenceDescriptionCollection references;
                 Byte[] continuationPoint;
 
                 references = Session.FetchReferences(ObjectIds.ObjectsFolder);
-
                 Session.Browse(
                     null,
                     null,
@@ -152,9 +161,11 @@ namespace SocketInterface
                     }
                 }
 
+                //Create standard subscription
                 Console.WriteLine("5 - Create a subscription with publishing interval of 1 second.");
                 var subscription = new Subscription(Session.DefaultSubscription) { PublishingInterval = 1000 };
 
+                //Add ServerTime to standard subscription
                 Console.WriteLine("6 - Add a list of items (server current time and status) to the subscription.");
                 var list = new List<MonitoredItem> {
                     new MonitoredItem(subscription.DefaultItem)

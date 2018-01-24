@@ -10,6 +10,12 @@ namespace SocketInterface
 {
     static class Extensions
     {
+        /// <summary>
+        /// Execute RPC
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="method">Method Name</param>
+        /// <param name="args">String Data or objects that can be parsed by ToString</param>
         public static void RPC(this TcpClient socket, string method, params object[] args)
         {
             string data = method;
@@ -18,13 +24,17 @@ namespace SocketInterface
             socket.WriteString(data);
         }
 
+        /// <summary>
+        /// Write StringData to the Client
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="data"></param>
         public static void WriteString(this TcpClient socket, string data)
         {
             NetworkStream stream = socket.GetStream();
             StreamWriter writer = new StreamWriter(stream);
             writer.WriteLine(data);
             writer.Flush();
-            Console.WriteLine("RPC: " + data);
         }
     }
 }

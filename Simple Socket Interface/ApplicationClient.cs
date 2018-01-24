@@ -25,6 +25,9 @@ namespace SocketInterface
             this.socket = socket;
         }
 
+        /// <summary>
+        /// Starts listening for Tcp clients
+        /// </summary>
         public static void StartAcceptingClients()
         {
             if (listener == null)
@@ -37,6 +40,10 @@ namespace SocketInterface
             listener.BeginAcceptTcpClient(HandleAsyncConnection, listener);
         }
 
+        /// <summary>
+        /// Starts Listen process of connected client and starts listening to Clients again
+        /// </summary>
+        /// <param name="res"></param>
         private static void HandleAsyncConnection(IAsyncResult res)
         {
             StartAcceptingClients(); //listen for new connections again
@@ -45,6 +52,10 @@ namespace SocketInterface
             new ApplicationClient(socket).Listen(socket);
         }
 
+        /// <summary>
+        /// Listen to TcpClient for RPC's
+        /// </summary>
+        /// <param name="socket"></param>
         private void Listen(TcpClient socket)
         {
             try
@@ -63,6 +74,11 @@ namespace SocketInterface
             }
         }
 
+        /// <summary>
+        /// Handles received RPC, executes method with string args
+        /// </summary>
+        /// <param name="targetObject"></param>
+        /// <param name="data"></param>
         private void HandleCommand(Object targetObject, string data)
         {
             string[] args = data.Split('`');
@@ -70,6 +86,11 @@ namespace SocketInterface
             method.Invoke(targetObject, args.Skip(1).ToArray());
         }
 
+        /// <summary>
+        /// RPC, Connect to OPC UA Server
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
         public async Task ConnectWithOpcClientAsync(string url)
         {
             if (!ConsoleClient.IsConnected)
@@ -78,6 +99,10 @@ namespace SocketInterface
             socket.RPC("OnOpcConnectionState", ConsoleClient.IsConnected);
         }
 
+        /// <summary>
+        /// RPC, Browse a Node, returns a list of children of Requested Node. If no node selected RootNode will be used
+        /// </summary>
+        /// <param name="id"></param>
         public void BrowseNode(string id = null)
         {
             try
@@ -93,6 +118,10 @@ namespace SocketInterface
             }
         }
 
+        /// <summary>
+        /// RPC, Reads Value of requested Node
+        /// </summary>
+        /// <param name="id"></param>
         public void ReadNodeValue(string id = null)
         {
             try
@@ -106,6 +135,11 @@ namespace SocketInterface
             }
         }
 
+        /// <summary>
+        /// RPC, Add a subscription to the subscription list
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="displayName"></param>
         public void AddSubscription(string id = null, string displayName = null)
         {
             try
@@ -130,6 +164,10 @@ namespace SocketInterface
             }
         }
 
+        /// <summary>
+        /// RPC, Stops a subscription
+        /// </summary>
+        /// <param name="id"></param>
         public void RemoveSubscription(string id = null)
         {
             try
@@ -150,6 +188,11 @@ namespace SocketInterface
             }
         }
 
+        /// <summary>
+        /// Event, Called on a change in a Node
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="e"></param>
         private void OnNotification(MonitoredItem item, MonitoredItemNotificationEventArgs e)
         {
             foreach (var value in item.DequeueValues())
