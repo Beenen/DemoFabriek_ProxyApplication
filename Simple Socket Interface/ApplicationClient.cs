@@ -127,11 +127,30 @@ namespace SocketInterface
             try
             {
                 DataValue value = ConsoleClient.Session?.ReadValue(NodeId.Parse(id));
-                socket.RPC("ReadNodeValue", id, value);
+                socket.RPC("OnReadNodeValue", id, value);
             }
             catch (Exception e)
             {
                 socket.RPC("OnError", "ReadNodeValue Error: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// RPC, Writes Data to the specified Node
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        public void WriteNodeValue(string id = null, string value = null)
+        {
+            try
+            {
+                Node node = ConsoleClient.Session?.ReadNode(id);
+                node.Write(0, new DataValue(value));
+                socket.RPC("OnWriteNodeValue", id, value);
+            }
+            catch (Exception e)
+            {
+                socket.RPC("OnError", "WriteNodeValue Error: " + e.Message);
             }
         }
 
@@ -185,6 +204,22 @@ namespace SocketInterface
             catch (Exception e)
             {
                 socket.RPC("OnError", "RemoveSubscription Error: " + e.Message);
+            }
+        }
+
+        /// <summary>
+        /// RPC, Clears all MonitoredNodes from the Subscription
+        /// </summary>
+        public void ClearSubscription()
+        {
+            try
+            {
+                ConsoleClient.Session.DefaultSubscription.Delete(false);
+                allMonitoredItems.Clear();
+            }
+            catch (Exception e)
+            {
+                socket.RPC("OnError", "ClearSubscription Error: " + e.Message);
             }
         }
 
